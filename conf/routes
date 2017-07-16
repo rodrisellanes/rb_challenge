@@ -9,3 +9,27 @@ GET     /persons                    controllers.PersonController.getPersons
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+
+# MyApp
+
+# Populate DB
+GET    /populate                          controllers.MainController.populate
+
+# Users
+GET     /users                            controllers.MainController.getUsers
+
+# Boards
+GET     /users/:id/boards                 controllers.MainController.getBoards(id: Long)
+POST    /users/:id/boards/new             controllers.MainController.addBoard(id: Long)
+
+# Locations
+GET     /users/:user_id/boards/:board_id/locations               controllers.MainController.getLocations(user_id: Long, board_id: Long)
+POST    /users/:user_id/boards/:board_id/locations/new           controllers.MainController.addLocation(user_id: Long, board_id: Long)
+PUT     /users/:user_id/boards/:board_id/locations/update                  controllers.MainController.updateLocations(user_id: Long, board_id: Long)
+DELETE  /users/:user_id/boards/locations/:board_id/:location_id/delete      controllers.MainController.deleteLocation(user_id: Long, board_id: Long, location_id: Long)
+
+
+# API Test
+GET     /usrs                               controllers.MainController.getUsers
+GET     /locations                          controllers.MainController.getAllLocations

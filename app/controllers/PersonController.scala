@@ -7,11 +7,9 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
 import play.api.libs.json.Json
-import models._
 import dal._
 
-import scala.concurrent.{ ExecutionContext, Future }
-
+import scala.concurrent.{ExecutionContext, Future}
 import javax.inject._
 
 class PersonController @Inject() (repo: PersonRepository, val messagesApi: MessagesApi)
