@@ -37,7 +37,8 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
 
   val locationForm: Form[CreateLocationForm] = Form {
     mapping(
-      "id" -> number
+      "id" -> number,
+      "board_id" -> number
     )(CreateLocationForm.apply)(CreateLocationForm.unapply)
   }
 
@@ -69,14 +70,14 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
   /**
     * BOARD
     */
+  def boardsHome(user_id: Long) = Action { implicit request =>
+    Ok(views.html.boards(boardForm, user_id))
+  }
+
   def getBoards(user_id: Long) = Action.async {
     boardRepo.listByUser(user_id).map { board =>
       Ok(Json.toJson(board))
     }
-  }
-
-  def boardsHome(user_id: Long) = Action { implicit request =>
-    Ok(views.html.boards(boardForm, user_id))
   }
 
   def addBoard() = Action.async { implicit request =>
@@ -86,7 +87,7 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
       },
       board => {
         boardRepo.create(board.name, board.user_id).map { _ =>
-          // If successful, we simply redirect to the index page.
+          // If successful, we simply redirect to the home page.
           Ok(views.html.home("Weather Boards", "Board Added"))
         }
       }
@@ -97,21 +98,24 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
     * LOCATION
     */
 
+  def locationHome(user_id: Long, board_id: Long) = Action { implicit request =>
+    Ok(views.html.locations(locationForm, user_id, board_id))
+  }
+
   def getLocations(user_id: Long, board_id: Long) = Action.async {
     locationRepo.listByBoard(board_id).map { location =>
       Ok(Json.toJson(location))
     }
   }
 
-  def addLocation(user_id: Long, board_id: Long) = Action.async { implicit request =>
+  def addLocation() = Action.async { implicit request =>
     locationForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(Ok(views.html.home("Weather Boards", errorForm.toString)))
       },
       location => {
-        locationRepo.create("", "", 0.0, "", 1, location.id).map { _ =>
-          // If successful, we simply redirect to the index page.
-//          Redirect(routes.MainController.home)
+        locationRepo.create("Bella Vista - AR" + location.id, "2017-07-16 / 01:24", 7.2, "Showers", 468739, location.board_id).map { _ =>
+          // If successful, we simply redirect to the home page.
           Ok(views.html.home("Weather Boards", "Location Added"))
         }
       }
@@ -120,10 +124,19 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
   def updateLocations(user_id: Long, board_id: Long) = Action {
     Ok("UPDATE - Missing Implementation")
   }
-  def deleteLocation(user_id: Long, board_id: Long, location_id: Long) = Action {
-    Ok("DELETE - Missing Implementation")
+  def deleteLocation() = Action.async { implicit request =>
+    locationForm.bindFromRequest.fold(
+      errorForm => {
+        Future.successful(Ok(views.html.home("Weather Boards", errorForm.toString)))
+      },
+      location => {
+        locationRepo.delete(location.id).map { _ =>
+          // If successful, we simply redirect to the home page.
+          Ok(views.html.home("Weather Boards", "Location " + location.id + "has been deleted"))
+        }
+      }
+    )
   }
-
 
   /**
     * TEST HTTP REST
@@ -138,4 +151,4 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
 
 case class CreateUserForm(name: String)
 case class CreateBoardForm(name: String, user_id: Int)
-case class CreateLocationForm(id: Int)
+case class CreateLocationForm(id: Int, board_id: Int)

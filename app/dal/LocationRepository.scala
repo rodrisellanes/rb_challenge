@@ -49,7 +49,6 @@ class LocationRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(im
     * Update a specific location
     */
   def update(id: Long, locationUp: Location): Future[Unit] = {
-//    val locationToUpdate: Location = locationUp
     db.run(location.filter(_.id === id).update(locationUp)).map(_ => ())
   }
 

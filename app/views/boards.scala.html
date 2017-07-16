@@ -9,9 +9,8 @@
 
   <h3>New Board</h3>
   @form(CSRF(routes.MainController.addBoard())) {
-    @inputText(board("name"), 'placeholder -> "Board Name")
+    <input name="name" value="" placeholder="Board Name"/>
     <input type="hidden" name="user_id" value="@user" />
-
 
     <div class="buttons">
       <input type="submit" value="Add Board"/>
