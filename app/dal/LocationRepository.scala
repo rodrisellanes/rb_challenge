@@ -28,8 +28,9 @@ class LocationRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(im
     def temp = column[Double]("temp")
     def text = column[String]("text")
     def woeid = column[Long]("woeid")
+    def board = column[Long]("board")
     // Location projection
-    def * = (id, city, date, temp, text, woeid) <> ((Location.apply _).tupled, Location.unapply)
+    def * = (id, city, date, temp, text, woeid, board) <> ((Location.apply _).tupled, Location.unapply)
   }
 
   private val location = TableQuery[LocationTable]
@@ -37,23 +38,40 @@ class LocationRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(im
   /**
     * Create a location into a board
     */
-  def create(city: String, date: String, temp: Double, text: String, woeid: Long): Future[Location] = db.run {
-    (location.map(l => (l.city, l.date, l.temp, l.text, l.woeid))
+  def create(city: String, date: String, temp: Double, text: String, woeid: Long, board: Long): Future[Location] = db.run {
+    (location.map(l => (l.city, l.date, l.temp, l.text, l.woeid, l.board))
       returning location.map(_.id)
-      into((locSorted, id) => Location(id, locSorted._1, locSorted._2, locSorted._3, locSorted._4, locSorted._5))
-      ) += (city, date, temp, text, woeid)
+      into((locSorted, id) => Location(id, locSorted._1, locSorted._2, locSorted._3, locSorted._4, locSorted._5, locSorted._6))
+      ) += (city, date, temp, text, woeid, board)
   }
 
   /**
-    * List all the locations in the database
+    * Update a specific location
+    */
+  def update(id: Long, locationUp: Location): Future[Unit] = {
+//    val locationToUpdate: Location = locationUp
+    db.run(location.filter(_.id === id).update(locationUp)).map(_ => ())
+  }
+
+  /**
+    * Delete a specific location
+    */
+  def delete(id: Long): Future[Unit] = {
+    db.run(location.filter(_.id === id).delete).map(_ => ())
+  }
+
+  /**
+    * List all locations in the database
     */
   def list(): Future[Seq[Location]] = db.run {
     location.result
   }
 
-
-//  def listByBoard(board_id: Long): Future[Seq[Location]] = {
-//    db.run(location.filter())
-//  }
+  /**
+    * List all locations from a board
+    */
+  def listByBoard(board_id: Long): Future[Seq[Location]] = {
+    db.run(location.filter(_.board === board_id).result)
+  }
 
 }

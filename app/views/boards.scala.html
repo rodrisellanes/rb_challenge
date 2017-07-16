@@ -1,0 +1,20 @@
+@(board: Form[CreateBoardForm], user: Long)(implicit request: RequestHeader, messages: Messages)
+
+@import helper._
+
+@main("New Board") {
+
+  <h3>My Boards</h3>
+  <a href="@routes.MainController.getBoards(user)">My Boards</a>
+
+  <h3>New Board</h3>
+  @form(CSRF(routes.MainController.addBoard())) {
+    @inputText(board("name"), 'placeholder -> "Board Name")
+    <input type="hidden" name="user_id" value="@user" />
+
+
+    <div class="buttons">
+      <input type="submit" value="Add Board"/>
+    </div>
+  }
+}

@@ -4,20 +4,20 @@ package controllers
 import dal.{BoardRepository, LocationRepository, UserRepository}
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.i18n.MessagesApi
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
 import util.PopulateDB
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import javax.inject.Inject
 
 class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardRepository, locationRepo: LocationRepository, messagesApi: MessagesApi)
                                        (implicit ec: ExecutionContext) extends Controller {
 
   //TODO: Research this `with I18nSupport`
-
-  case class CreateUserForm(id: String)
 
   /**
     * The mapping for the user, board, location form.
@@ -28,19 +28,40 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
     )(CreateUserForm.apply)(CreateUserForm.unapply)
   }
 
+  val boardForm: Form[CreateBoardForm] = Form {
+    mapping(
+      "name" -> nonEmptyText,
+      "user_id" -> number
+    )(CreateBoardForm.apply)(CreateBoardForm.unapply)
+  }
+
+  val locationForm: Form[CreateLocationForm] = Form {
+    mapping(
+      "id" -> number
+    )(CreateLocationForm.apply)(CreateLocationForm.unapply)
+  }
+
+  /**
+    * Populate Database
+    */
  def populate = Action {
    val populateDB = new PopulateDB(userRepo, boardRepo, locationRepo)
    populateDB.createUser()
    populateDB.createBoards()
    populateDB.createLocations()
-   Ok("Database populated")
+   Ok(views.html.home("Weather Boards", "Database populated"))
  }
+
+  def home = Action {
+    Ok(views.html.home("Weather Boards", "Welcome"))
+  }
 
   /**
     * USER
     */
   def getUsers = Action.async {
     userRepo.list().map { users =>
+//      Ok(views.html.users(Json.toJson(users)))
       Ok(Json.toJson(users))
     }
   }
@@ -54,9 +75,22 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
     }
   }
 
-  def addBoard(user_id: Long) = Action {
-    boardRepo.create("New Board", user_id)
-    Ok("Board created")
+  def boardsHome(user_id: Long) = Action { implicit request =>
+    Ok(views.html.boards(boardForm, user_id))
+  }
+
+  def addBoard() = Action.async { implicit request =>
+    boardForm.bindFromRequest.fold(
+      errorForm => {
+        Future.successful(Ok(views.html.home("Weather Boards", errorForm.toString)))
+      },
+      board => {
+        boardRepo.create(board.name, board.user_id).map { _ =>
+          // If successful, we simply redirect to the index page.
+          Ok(views.html.home("Weather Boards", "Board Added"))
+        }
+      }
+    )
   }
 
   /**
@@ -64,13 +98,24 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
     */
 
   def getLocations(user_id: Long, board_id: Long) = Action.async {
-    locationRepo.list().map { location =>
+    locationRepo.listByBoard(board_id).map { location =>
       Ok(Json.toJson(location))
     }
   }
 
-  def addLocation(user_id: Long, board_id: Long) = Action {
-    Ok("ADD - Missing Implementation")
+  def addLocation(user_id: Long, board_id: Long) = Action.async { implicit request =>
+    locationForm.bindFromRequest.fold(
+      errorForm => {
+        Future.successful(Ok(views.html.home("Weather Boards", errorForm.toString)))
+      },
+      location => {
+        locationRepo.create("", "", 0.0, "", 1, location.id).map { _ =>
+          // If successful, we simply redirect to the index page.
+//          Redirect(routes.MainController.home)
+          Ok(views.html.home("Weather Boards", "Location Added"))
+        }
+      }
+    )
   }
   def updateLocations(user_id: Long, board_id: Long) = Action {
     Ok("UPDATE - Missing Implementation")
@@ -90,3 +135,7 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
     }
   }
 }
+
+case class CreateUserForm(name: String)
+case class CreateBoardForm(name: String, user_id: Int)
+case class CreateLocationForm(id: Int)

@@ -1,0 +1,16 @@
+@(location: Form[CreateLocationForm])(implicit request: RequestHeader, messages: Messages)
+
+@import helper._
+
+@main("User - Boards") {
+
+  <h1>User - Boards</h1>
+
+  @form(CSRF(routes.MainController.addLocation(1, 1))) {
+    @inputText(location("name"))
+
+    <div class="buttons">
+      <input type="submit" value="Add Location"/>
+    </div>
+  }
+}

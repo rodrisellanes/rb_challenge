@@ -21,9 +21,14 @@ class PopulateDB @Inject() (userRepo: UserRepository, boardRepo: BoardRepository
   }
 
   def createLocations(): Unit = {
-    locationRepo.create("Buenos Aires", "2017-07-16 / 01:24", 7.2, "Showers", 468739)
-    locationRepo.create("Canberra", "2017-07-16 / 01:26", 2.0, "Sunny", 1100968)
-    locationRepo.create("Sydney", "2017-07-16 / 01:27", 11.6, "Cloundy", 1105779)
+    locationRepo.create("Buenos Aires - AR", "2017-07-16 / 01:24", 7.2, "Showers", 468739, 1)
+    locationRepo.create("Canberra - AU", "2017-07-16 / 01:26", 2.0, "Sunny", 1100968, 1)
+    locationRepo.create("Sydney - AU", "2017-07-16 / 01:27", 11.6, "Cloudy", 1105779, 4)
+    locationRepo.create("Berlin - GR", "2017-07-16 / 03:12", 6.1, "Mostly Sunny", 638242, 4)
+    locationRepo.create("Berlin - GR", "2017-07-16 / 03:12", 6.1, "Mostly Sunny", 638242, 2)
+    locationRepo.create("Austin - US", "2017-07-16 / 03:24", 18.9, "Cover", 2357536, 2)
+    locationRepo.create("Boston - US", "2017-07-16 / 03:25", 16.6, "Cover", 2367105, 1)
+
   }
 
 }

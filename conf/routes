@@ -12,6 +12,7 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 
 
 # MyApp
+GET     /home                             controllers.MainController.home
 
 # Populate DB
 GET    /populate                          controllers.MainController.populate
@@ -20,13 +21,14 @@ GET    /populate                          controllers.MainController.populate
 GET     /users                            controllers.MainController.getUsers
 
 # Boards
-GET     /users/:id/boards                 controllers.MainController.getBoards(id: Long)
-POST    /users/:id/boards/new             controllers.MainController.addBoard(id: Long)
+GET     /users/:id/boards                 controllers.MainController.boardsHome(id: Long)
+GET     /users/:id/boards/myboards        controllers.MainController.getBoards(id: Long)
+POST    /users/id/boards/new              controllers.MainController.addBoard
 
 # Locations
-GET     /users/:user_id/boards/:board_id/locations               controllers.MainController.getLocations(user_id: Long, board_id: Long)
-POST    /users/:user_id/boards/:board_id/locations/new           controllers.MainController.addLocation(user_id: Long, board_id: Long)
-PUT     /users/:user_id/boards/:board_id/locations/update                  controllers.MainController.updateLocations(user_id: Long, board_id: Long)
+GET     /users/:user_id/boards/:board_id/locations                          controllers.MainController.getLocations(user_id: Long, board_id: Long)
+POST    /users/:user_id/boards/:board_id/locations/new                      controllers.MainController.addLocation(user_id: Long, board_id: Long)
+PUT     /users/:user_id/boards/:board_id/locations/update                   controllers.MainController.updateLocations(user_id: Long, board_id: Long)
 DELETE  /users/:user_id/boards/locations/:board_id/:location_id/delete      controllers.MainController.deleteLocation(user_id: Long, board_id: Long, location_id: Long)
 
 

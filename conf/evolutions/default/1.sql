@@ -29,7 +29,8 @@ create table "LOCATION" (
   "date" varchar not null,
   "temp" double not null,
   "text" varchar not null,
-  "woeid" bigint
+  "woeid" bigint,
+  "board" bigint
 );
 
 # --- !Downs
