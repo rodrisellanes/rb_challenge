@@ -14,13 +14,13 @@ import play.api.i18n.Messages.Implicits._
 import scala.concurrent.{ExecutionContext, Future}
 import javax.inject.Inject
 
-import models.Location
+import models.{Conditions, Location}
 import play.api.libs.ws.WSClient
+
+import scala.util.{Failure, Success}
 
 class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo: BoardRepository, locationRepo: LocationRepository, messagesApi: MessagesApi)
                                        (implicit ec: ExecutionContext) extends Controller {
-
-  //TODO: Research this `with I18nSupport`
 
   /**
     * The mapping for the user, board, location form.
@@ -45,6 +45,8 @@ class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo
     )(CreateLocationForm.apply)(CreateLocationForm.unapply)
   }
 
+  val proxy = new ProxyWeather(ws)
+
   /**
     * Populate Database
     */
@@ -52,7 +54,7 @@ class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo
     val populateDB = new PopulateDB(userRepo, boardRepo, locationRepo)
     populateDB.createUser()
     populateDB.createBoards()
-    populateDB.createLocations()
+//    populateDB.createLocations()
     Ok(views.html.home("Weather Boards", "Database populated"))
   }
 
@@ -118,23 +120,25 @@ class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo
         Future.successful(Ok(views.html.home("Weather Boards", errorForm.toString)))
       },
       location => {
-        //TODO
-        locationRepo.create("Bella Vista - AR" + location.id, "2017-07-16 / 01:24", 7.2, "Showers", 468739, location.board_id).map { _ =>
-          // If successful, we simply redirect to the home page.
-          Ok(views.html.home("Weather Boards", "Location Added"))
+        locationRepo.create(Location.newLocationToBoard(location.id, location.board_id)).map { newLocation =>
+          proxy.weatherConditionsByWoeid(newLocation.woeid).map(condition => Location.updateLocation(newLocation, condition)).onComplete {
+            case Success(locationToUpdate) => locationRepo.update(locationToUpdate.id, locationToUpdate)
+            case Failure(t) => println(t.getMessage)
+          }
+          Ok(views.html.home("Weather Boards", "Location ID: " + location.id + " Added"))
         }
       }
     )
   }
 
   def updateLocations(user_id: Long, board_id: Long) = Action.async {
-    val proxy = new ProxyWeather(ws)
+//    val proxy = new ProxyWeather(ws)
     locationRepo.listByBoard(board_id).map { location =>
       location.andThen(l => l.woeid)
     }
     //TODO
     //    proxy.futureResult.map(option => Ok(option))
-    proxy.getWeatherByWoeid(468739).map(option => Ok(option))
+    proxy.weatherConditionsByWoeid(468739).map(option => Ok(option.toString))
 
   }
 
@@ -146,7 +150,7 @@ class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo
       location => {
         locationRepo.delete(location.id).map { _ =>
           // If successful, we simply redirect to the home page.
-          Ok(views.html.home("Weather Boards", "Location " + location.id + "has been deleted"))
+          Ok(views.html.home("Weather Boards", "Location " + location.id + " has been deleted"))
         }
       }
     )

@@ -38,18 +38,18 @@ class LocationRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(im
   /**
     * Create a location into a board
     */
-  def create(city: String, date: String, temp: Double, text: String, woeid: Long, board: Long): Future[Location] = db.run {
+  def create(newLocation: Location): Future[Location] = db.run {
     (location.map(l => (l.city, l.date, l.temp, l.text, l.woeid, l.board))
       returning location.map(_.id)
       into((locSorted, id) => Location(id, locSorted._1, locSorted._2, locSorted._3, locSorted._4, locSorted._5, locSorted._6))
-      ) += (city, date, temp, text, woeid, board)
+      ) += (newLocation.city, newLocation.date, newLocation.temp, newLocation.text, newLocation.woeid, newLocation.board)
   }
 
   /**
     * Update a specific location
     */
-  def update(id: Long, locationUp: Location): Future[Unit] = {
-    db.run(location.filter(_.id === id).update(locationUp)).map(_ => ())
+  def update(id: Long, locationToUpdate: Location): Future[Unit] = {
+    db.run(location.filter(_.id === id).update(locationToUpdate)).map(_ => ())
   }
 
   /**

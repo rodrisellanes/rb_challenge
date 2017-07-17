@@ -2,7 +2,7 @@ package util
 
 import javax.inject.{Inject, Singleton}
 
-import models.Location
+import models.{Location, Conditions}
 import play.api.libs.json._
 import play.api.libs.ws.{WSClient, WSRequest}
 
@@ -18,9 +18,19 @@ class ProxyWeather @Inject() (ws: WSClient)(implicit ec: ExecutionContext) {
 
   val request: WSRequest = ws.url(url)
 
-  def getWeatherByWoeid(woeid: Int): Future[JsValue] = {
+  def weatherByWoeid(woeid: Int): Future[JsValue] = {
     ws.url(url + select + woeid + format).get().map {
       response => response.json
+    }
+  }
+
+  def weatherConditionsByWoeid(woeid: Long): Future[Conditions] = {
+    ws.url(url + select + woeid + format).get().map {
+      response => Conditions.apply(
+        (response.json \ "query" \ "results" \ "channel" \ "item" \ "condition" \ "date").as[String],
+        (response.json \ "query" \ "results" \ "channel" \ "item" \ "condition" \ "temp").as[String].toDouble,
+        (response.json \ "query" \ "results" \ "channel" \ "item" \ "condition" \ "text").as[String]
+      )
     }
   }
 
