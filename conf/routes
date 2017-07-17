@@ -29,5 +29,5 @@ POST    /users/id/boards/add              controllers.MainController.addBoard
 GET     /users/:user_id/boards/:board_id/                            controllers.MainController.locationHome(user_id: Long, board_id: Long)
 GET     /users/:user_id/boards/:board_id/locations                   controllers.MainController.getLocations(user_id: Long, board_id: Long)
 POST    /users/user_id/boards/board_id/locations/add                 controllers.MainController.addLocation
-PUT     /users/:user_id/boards/:board_id/locations/update            controllers.MainController.updateLocations(user_id: Long, board_id: Long)
+GET     /users/:user_id/boards/:board_id/locations/update            controllers.MainController.updateLocations(user_id: Long, board_id: Long)
 POST    /users/user_id/boards/board_id/locations/delete              controllers.MainController.deleteLocation

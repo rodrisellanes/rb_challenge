@@ -1,9 +1,11 @@
 package util
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
 import dal.{BoardRepository, LocationRepository, UserRepository}
+import models.Location
 
+@Singleton
 class PopulateDB @Inject() (userRepo: UserRepository, boardRepo: BoardRepository, locationRepo: LocationRepository) {
 
   def createUser(): Unit = {

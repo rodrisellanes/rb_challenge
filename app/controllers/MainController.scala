@@ -7,14 +7,17 @@ import play.api.data.Forms._
 import play.api.i18n.MessagesApi
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
-import util.PopulateDB
+import util.{PopulateDB, ProxyWeather}
 import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 import javax.inject.Inject
 
-class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardRepository, locationRepo: LocationRepository, messagesApi: MessagesApi)
+import models.Location
+import play.api.libs.ws.WSClient
+
+class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo: BoardRepository, locationRepo: LocationRepository, messagesApi: MessagesApi)
                                        (implicit ec: ExecutionContext) extends Controller {
 
   //TODO: Research this `with I18nSupport`
@@ -45,13 +48,13 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
   /**
     * Populate Database
     */
- def populate = Action {
-   val populateDB = new PopulateDB(userRepo, boardRepo, locationRepo)
-   populateDB.createUser()
-   populateDB.createBoards()
-   populateDB.createLocations()
-   Ok(views.html.home("Weather Boards", "Database populated"))
- }
+  def populate = Action {
+    val populateDB = new PopulateDB(userRepo, boardRepo, locationRepo)
+    populateDB.createUser()
+    populateDB.createBoards()
+    populateDB.createLocations()
+    Ok(views.html.home("Weather Boards", "Database populated"))
+  }
 
   def home = Action {
     Ok(views.html.home("Weather Boards", "Welcome"))
@@ -62,7 +65,7 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
     */
   def getUsers = Action.async {
     userRepo.list().map { users =>
-//      Ok(views.html.users(Json.toJson(users)))
+      //      Ok(views.html.users(Json.toJson(users)))
       Ok(Json.toJson(users))
     }
   }
@@ -99,7 +102,8 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
     */
 
   def locationHome(user_id: Long, board_id: Long) = Action { implicit request =>
-    Ok(views.html.locations(locationForm, user_id, board_id))
+    val locations = Location.locations
+    Ok(views.html.locations(locationForm, user_id, board_id, locations))
   }
 
   def getLocations(user_id: Long, board_id: Long) = Action.async {
@@ -114,6 +118,7 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
         Future.successful(Ok(views.html.home("Weather Boards", errorForm.toString)))
       },
       location => {
+        //TODO
         locationRepo.create("Bella Vista - AR" + location.id, "2017-07-16 / 01:24", 7.2, "Showers", 468739, location.board_id).map { _ =>
           // If successful, we simply redirect to the home page.
           Ok(views.html.home("Weather Boards", "Location Added"))
@@ -121,9 +126,18 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
       }
     )
   }
-  def updateLocations(user_id: Long, board_id: Long) = Action {
-    Ok("UPDATE - Missing Implementation")
+
+  def updateLocations(user_id: Long, board_id: Long) = Action.async {
+    val proxy = new ProxyWeather(ws)
+    locationRepo.listByBoard(board_id).map { location =>
+      location.andThen(l => l.woeid)
+    }
+    //TODO
+    //    proxy.futureResult.map(option => Ok(option))
+    proxy.getWeatherByWoeid(468739).map(option => Ok(option))
+
   }
+
   def deleteLocation() = Action.async { implicit request =>
     locationForm.bindFromRequest.fold(
       errorForm => {
@@ -136,16 +150,6 @@ class MainController @Inject()(userRepo: UserRepository, boardRepo: BoardReposit
         }
       }
     )
-  }
-
-  /**
-    * TEST HTTP REST
-    */
-
-  def getAllLocations() = Action.async {
-    locationRepo.list().map { location =>
-      Ok(Json.toJson(location))
-    }
   }
 }
 

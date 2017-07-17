@@ -1,16 +1,16 @@
-@(location: Form[CreateLocationForm], user_id: Long, board_id: Long)(implicit request: RequestHeader, messages: Messages)
+@(location: Form[CreateLocationForm], user_id: Long, board_id: Long, locations: List[Location])(implicit request: RequestHeader, messages: Messages)
 
   @import helper._
 
-  @main("New Location") {
+  @main("Board Locations") {
 
-    <h3>My Location - Options</h3>
+    <h3>User [@user_id] Board [@board_id] Locations</h3>
     <a href="@routes.MainController.getLocations(user_id, board_id)">My Locations</a>
     <a href="@routes.MainController.updateLocations(user_id, board_id)">Update Locations</a>
 
     <h3>New Location</h3>
     @form(CSRF(routes.MainController.addLocation())) {
-      <input name="id" value="" placeholder="Location ID"/>
+      <input name="id" value="" placeholder="Location Code"/>
       <input type="hidden" name="board_id" value="@board_id" />
 
       <div class="buttons">
@@ -27,5 +27,18 @@
         <input type="submit" value="Delete Location"/>
       </div>
     }
+    <table>
+      <tr>
+        <td>Code</td>
+        <td>City</td>
+      </tr>
+      @for(location <- locations) {
+        <tr>
+          <td>@location.id</td>
+          <td>@location.city</td>
+        </tr>
+      }
+    </table>
+
 
   }

@@ -12,3 +12,4 @@ libraryDependencies += "com.h2database" % "h2" % "1.4.194"
 
 libraryDependencies += specs2 % Test
 libraryDependencies += filters
+libraryDependencies += ws
