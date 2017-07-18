@@ -4,6 +4,7 @@ import play.api.libs.json.Json
 
 case class Location(id: Long, city: String, date: String, temp: Double, text: String, woeid: Long, board: Long)
 case class Conditions(date: String, temp: Double, text: String)
+case class Forecast(code: String, date: String, day: String, high: String, low: String, text: String)
 
 object Location {
 
@@ -39,6 +40,18 @@ object Location {
       conditions.date,
       conditions.temp,
       conditions.text,
+      location.woeid,
+      location.board
+    )
+  }
+  // TODO user polymorphism (updateLocation & updateForecast)
+  def updateForecast(location: Location, forecast: Forecast): Location = {
+    Location.apply(
+      location.id,
+      location.city,
+      forecast.date,
+      forecast.high.toDouble,
+      forecast.text,
       location.woeid,
       location.board
     )

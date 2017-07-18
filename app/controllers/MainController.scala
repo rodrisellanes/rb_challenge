@@ -135,9 +135,9 @@ class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo
     )
   }
 
-  def updateLocations(user_id: Long, board_id: Long) = Action.async {
-    locationRepo.listByBoard(board_id).map { location =>
-      location.foreach { location_data =>
+  def updateCurrentConditions(user_id: Long, board_id: Long) = Action.async {
+    locationRepo.listByBoard(board_id).map { locations =>
+      locations.foreach { location_data =>
         proxy.weatherConditionsByWoeid(location_data.woeid).map(condition => Location.updateLocation(location_data, condition)).onComplete {
           case Success(locationToUpdate) => locationRepo.update(locationToUpdate.id, locationToUpdate)
           case Failure(t) => println(t.getMessage)
@@ -146,6 +146,26 @@ class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo
       // If successful, we simply redirect to the home page.
       Ok(views.html.home("Weather Boards", "Locations from board: " + board_id +  " updated"))
     }
+  }
+
+  def updateForecastLocations() = Action.async { implicit request =>
+    locationForm.bindFromRequest.fold(
+      errorForm => {
+        Future.successful(Ok(views.html.home("Weather Boards", errorForm.toString)))
+      },
+      location => {
+        locationRepo.listByBoard(location.board_id).map { locations =>
+          locations.foreach { location_data =>
+            proxy.cityForecast(location_data.city).map(forecast =>
+              Location.updateForecast(location_data, proxy.dateForecast(forecast, location.id))).onComplete {
+              case Success(locationToUpdate) => locationRepo.update(locationToUpdate.id, locationToUpdate)
+              case Failure(t) => println(t.getMessage)
+            }
+          }
+          Ok(views.html.home("Weather Boards", "Locations from board: " + location.board_id +  " updated"))
+        }
+      }
+    )
   }
 
   def deleteLocation() = Action.async { implicit request =>
