@@ -45,6 +45,9 @@ class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo
     )(CreateLocationForm.apply)(CreateLocationForm.unapply)
   }
 
+  /**
+    * WS (WebService) client to hook internet endpoints
+    */
   val proxy = new ProxyWeather(ws)
 
   /**
@@ -125,6 +128,7 @@ class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo
             case Success(locationToUpdate) => locationRepo.update(locationToUpdate.id, locationToUpdate)
             case Failure(t) => println(t.getMessage)
           }
+          // If successful, we simply redirect to the home page.
           Ok(views.html.home("Weather Boards", "Location ID: " + location.id + " Added"))
         }
       }
@@ -132,14 +136,16 @@ class MainController @Inject()(ws: WSClient, userRepo: UserRepository, boardRepo
   }
 
   def updateLocations(user_id: Long, board_id: Long) = Action.async {
-//    val proxy = new ProxyWeather(ws)
     locationRepo.listByBoard(board_id).map { location =>
-      location.andThen(l => l.woeid)
+      location.foreach { location_data =>
+        proxy.weatherConditionsByWoeid(location_data.woeid).map(condition => Location.updateLocation(location_data, condition)).onComplete {
+          case Success(locationToUpdate) => locationRepo.update(locationToUpdate.id, locationToUpdate)
+          case Failure(t) => println(t.getMessage)
+        }
+      }
+      // If successful, we simply redirect to the home page.
+      Ok(views.html.home("Weather Boards", "Locations from board: " + board_id +  " updated"))
     }
-    //TODO
-    //    proxy.futureResult.map(option => Ok(option))
-    proxy.weatherConditionsByWoeid(468739).map(option => Ok(option.toString))
-
   }
 
   def deleteLocation() = Action.async { implicit request =>

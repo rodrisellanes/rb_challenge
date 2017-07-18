@@ -11,10 +11,12 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ProxyWeather @Inject() (ws: WSClient)(implicit ec: ExecutionContext) {
 
-  // Split URL (endpoint yahoo weather)
+  // Splitted URL Conditions (endpoint yahoo weather)
   val url = "https://query.yahooapis.com/v1/public/yql?q="
   val select = "select item.condition from weather.forecast where woeid = "
   val format = " and u='c'&format=json"
+  // Splitted URL Forecast (endpoint yahoo weather)
+  // TODO
 
   val request: WSRequest = ws.url(url)
 

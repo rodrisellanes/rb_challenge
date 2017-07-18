@@ -19,6 +19,7 @@ object Location {
   )
 
   def newLocationToBoard(location_id: Int, board_id: Long): Location = {
+    // TODO implement Option type
     val location = locations.find(_.id == location_id).head
     Location.apply(
       location.id,
