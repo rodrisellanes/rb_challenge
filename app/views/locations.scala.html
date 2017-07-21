@@ -1,0 +1,52 @@
+@(location: Form[CreateLocationForm], user_id: Long, board_id: Long, locations: List[Location])(implicit request: RequestHeader, messages: Messages)
+
+  @import helper._
+
+  @main("Board Locations") {
+
+    <h3>User [@user_id] Board [@board_id] Locations</h3>
+    <a href="@routes.MainController.getLocations(user_id, board_id)">My Locations</a>
+    <a href="@routes.MainController.updateCurrentConditions(user_id, board_id)">Current Conditions</a>
+
+
+    <h3>New Location</h3>
+    @form(CSRF(routes.MainController.addLocation())) {
+      <input name="id" value="" placeholder="Location Code"/>
+      <input type="hidden" name="board_id" value="@board_id" />
+      <div class="buttons">
+        <input type="submit" value="Add Location"/>
+      </div>
+    }
+
+    <h3>Forecast</h3>
+    @form(CSRF(routes.MainController.updateForecastLocations())) {
+      <input name="id" value="" placeholder="Forecast Date"/>
+      <input type="hidden" name="board_id" value="@board_id" />
+      <div class="buttons">
+        <input type="submit" value="Forecast Date"/>
+      </div>
+    }
+
+    <h3>Delete Location</h3>
+    @form(CSRF(routes.MainController.deleteLocation())) {
+      <input name="id" value="" placeholder="Location ID"/>
+      <input type="hidden" name="board_id" value="@board_id" />
+      <div class="buttons">
+        <input type="submit" value="Delete Location"/>
+      </div>
+    }
+
+    <table>
+      <tr>
+        <td>Code</td>
+        <td>City</td>
+      </tr>
+      @for(location <- locations) {
+        <tr>
+          <td>@location.id</td>
+          <td>@location.city</td>
+        </tr>
+      }
+    </table>
+
+  }
